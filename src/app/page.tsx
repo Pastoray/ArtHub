@@ -1,113 +1,212 @@
-import Image from "next/image";
+'use client'
+
+import MaxWidthWrapper from '@/components/MaxWidthWrapper'
+import { BotOff, CreditCard, Earth, Leaf, Zap } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { trpc } from '@/trpc/client'
+import { Skeleton } from '@/components/ui/skeleton'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+const perks = [
+  {
+    name: 'Global Reach',
+    description:
+      'Access to a diverse pool of artists and clients from around the world, enabling global collaborations and opportunities',
+    icon: Earth,
+  },
+  {
+    name: 'Price Selection',
+    description:
+      'Users have the freedom to select the price that best fits their requirements from a range of options provided by artists',
+    icon: CreditCard,
+  },
+  {
+    name: 'No AI',
+    description:
+      'Embrace a human-centric experience without the influence of artificial intelligence, ensuring personalized interactions',
+    icon: BotOff,
+  },
+  {
+    name: 'Instant Delivery',
+    description:
+      'Get what you need in the blink of an eye. No waiting, no wasting time just instant gratificationng',
+    icon: Zap,
+  },
+  {
+    name: 'For the planet',
+    description:
+      'We contribute a portion of our annual revenue to support charities and organizations worldwide',
+    icon: Leaf,
+  },
+]
 
 export default function Home() {
+  const { data: newest, isLoading: isLoading1 } =
+    trpc.product.getProducts.useQuery({
+      limit: 5,
+      offset: 0,
+      options: { orderBy: { created_at: 'desc' } },
+    })
+  const { data: popular, isLoading: isLoading2 } =
+    trpc.product.getProducts.useQuery({
+      limit: 5,
+      offset: 0,
+      options: { orderBy: { purshases: 'desc' } },
+    })
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
+    <>
+      <MaxWidthWrapper className='my-12 flex flex-col justify-center items-center text-center'>
+        <h1 className='max-w-6xl text-5xl font-bold md:text-6xl lg:text-7xl'>
+          Your <span className='text-indigo-600'>#1</span> marketplace for
+          high-quality{' '}
+          <span className=' text-indigo-600'>Drawings & Artworks</span>
+        </h1>
+        <p className='max-w-prose text-gray-800 sm:text-xl font-semibold mt-16'>
+          Welcome to <span className='text-indigo-600'>ArtHub</span>, your
+          premier destination for discovering and acquiring stunning artwork.
+          Our fully managed platform allows artists to effortlessly post their
+          creations, while art enthusiasts can easily explore and purchase
+          unique pieces
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+        <Link href={'/products'} className={cn(buttonVariants(), 'mt-6')}>
+          Products Dashboard &rarr;
+        </Link>
+      </MaxWidthWrapper>
+      <div className='flex flex-col justify-center items-start'>
+        <section id='trending-products' className='mt-28 mx-10'>
+          <div className='flex justify-between items-center'>
+            <h2 className='font-bold text-gray-800 text-3xl'>
+              Newest Artworks
+            </h2>
+            <Link href={'/products'} className='text-indigo-600 font-semibold'>
+              Browse Artworks &rarr;
+            </Link>
+          </div>
+          <p className='text-muted-foreground mt-1'>
+            Explore ArtHub&apos;s latest artworks, connecting buyers with
+            skilled professionals globally
+          </p>
+          <ul className='flex items-center gap-4 mt-4 p-4 w-full'>
+            {isLoading1
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div className='flex flex-col space-y-3' key={`v ${i}`}>
+                    <Skeleton className='h-[125px] w-[250px] rounded-xl' />
+                    <div className='space-y-2'>
+                      <Skeleton className='h-4 w-[250px]' />
+                      <Skeleton className='h-4 w-[200px]' />
+                    </div>
+                  </div>
+                ))
+              : newest?.products.map((art, i) => (
+                  <li key={`n${i}`}>
+                    <Link href={`/products/${art.id}`}>
+                      <div className='relative flex-1 hover:scale-105 transition-all duration-200 h-64 w-64'>
+                        <div className='absolute inset-0 flex flex-col justify-start items-start p-4'>
+                          <h2 className='z-10 text-white font-semibold text-2xl tracking-loose'>
+                            {art.title}
+                          </h2>
+                          <p className='z-10 text-gray-100 font-semibold text-md line-clamp-2'>
+                            {art.description}
+                          </p>
+                        </div>
+                        <Image
+                          className='object-fit rounded-xl'
+                          src={`/uploads/${art.image_refs[0]}`}
+                          fill
+                          alt={`${art.title} Image`}
+                        />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+          </ul>
+        </section>
+        <section id='popular-products' className='mt-28 mx-10'>
+          <div className='flex justify-between items-center'>
+            <h2 className='font-bold text-gray-800 text-3xl'>
+              Popular Artworks
+            </h2>
+            <Link href={`/products`} className='text-indigo-600 font-semibold'>
+              Browse Artworks &rarr;
+            </Link>
+          </div>
+          <p className='text-muted-foreground mt-1'>
+            Explore ArtHub&apos;s sought-after art, where top-rated
+            professionals post their high-quality art
+          </p>
+          <ul className='flex gap-4 mt-4'>
+            {isLoading2
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div className='flex flex-col space-y-3' key={`v2 ${i}`}>
+                    <Skeleton className='h-[125px] w-[250px] rounded-xl' />
+                    <div className='space-y-2'>
+                      <Skeleton className='h-4 w-[250px]' />
+                      <Skeleton className='h-4 w-[200px]' />
+                    </div>
+                  </div>
+                ))
+              : popular?.products.map((art, i) => (
+                  <li key={`p ${i}`}>
+                    <Link href={`/products/${art.id}`}>
+                      <div className='relative flex-1 hover:scale-105 transition-all duration-200 h-64 w-64'>
+                        <div className='absolute inset-0 flex flex-col justify-start items-start p-4'>
+                          <h2 className='z-10 text-white font-semibold text-2xl tracking-loose'>
+                            {art.title}
+                          </h2>
+                          <p className='z-10 text-gray-100 font-semibold text-md'>
+                            {art.description}
+                          </p>
+                        </div>
+                        <Image
+                          className='object-fit rounded-xl'
+                          src={`/uploads/${art.image_refs[0]}`}
+                          fill
+                          alt={`${art.title} Image`}
+                        />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+          </ul>
+        </section>
+      </div>
+      <MaxWidthWrapper>
+        <div className='p-16 mt-32 flex flex-col justify-center items-center'>
+          <h1 className='max-w-6xl text-5xl font-bold md:text-6xl lg:text-7xl'>
+            Why <span className='text-indigo-600'>ArtHub</span> ?
+          </h1>
+          <p className='max-w-4xl text-gray-800 sm:text-xl font-semibold mt-16 text-center'>
+            Well, because we believe in empowering talent globally. By providing
+            a platform where artists and clients can connect seamlessly, we
+            facilitate opportunities for growth, collaboration, and success.
+            With our user-friendly interface, secure payment system, and
+            commitment to supporting both artists and clients,{' '}
+            <span className='text-indigo-600'>ArtHub</span> also provides the
+            following perks
+          </p>
         </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+        <div className='grid lg:grid-cols-3 gap-8 md:grid-cols-2 sm:grid-cols-1 mt-4 mb-16'>
+          {perks.map((perk, i) => (
+            <div
+              key={i}
+              className='flex flex-col justify-center items-center gap-4'
+            >
+              <div className='h-16 w-16 rounded-full bg-indigo-200 text-indigo-600 flex justify-center items-center'>
+                <perk.icon />
+              </div>
+              <p className='max-w-md sm:text-xl font-semibold text-center'>
+                {perk.name}
+              </p>
+              <p className='max-w-md text-gray-800 sm:text-xl text-center'>
+                {perk.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </MaxWidthWrapper>
+    </>
+  )
 }
